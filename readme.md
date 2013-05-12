@@ -41,6 +41,8 @@ Adicionando um field a memória:
 (clear)
 Limpa todos os fatos da memória
 
+Observações:
+Um fato sempre tem seu valor estático. Ele só pode ser mudado através de um retract seguido de um assert.
 
 
 ========================
@@ -84,12 +86,55 @@ O nome de uma rule deve ser único.
  Imprimindo coisas:
  (printout t "quack" crlf) -> Imprime "quack" e quebra a linha. Usado em uma action de uma rule.
  
+
+------- Rules com "not" nos valores
+Basta usar ~ antes do valor do fato:
+
+(defrule walk
+ (light ~green)
+=>
+ (printout t "Don't walk" crlf))
  
  
+-------- Rules com "OR" nos valores
+Basta usar pipe entre os vários valores do fato:
+
+> (defrule cautious
+ (light yellow|blinking-yellow)
+=>
+ (printout t "Be cautious" crlf))
  
+--------- Rules com "AND" nos valores
+Basta usar o & entre os vários valores do fato:
+
+(defrule not-yellow-red
+ (light ?color&~red&~yellow)
+=>
+ (printout t "Go, since light is " ?color crlf))
+
  
+========================
+Variables
+========================
+
+Uma variável sempre precisa ser inicializada antes de ser usada.
+
+As variáveis podem ser usadas no lugar de valores nos asserts. Por exemplo:
+
+(defrule make-quack
+ (duck-sound ?sound)
+=>
+ (assert (sound-is ?sound)))
 
 
+bind (?x (+ 1 2))
+Joga o valor 3 para a variável ?x 
+
+
+
+?my-variable
+
+ 
 ========================
 Debug
 ========================
