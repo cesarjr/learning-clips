@@ -1,3 +1,10 @@
+(defglobal ?*MO-quantity* = 0)
+(defglobal ?*hh-tarefa* = 0)
+(defglobal ?*work-load-per-day* = 0)
+(defglobal ?*stop-duration* = 0)
+
+
+
 (defrule startup
 =>
   (assert(show results))
@@ -70,11 +77,36 @@
   (ask MO-quantity)
 =>
   (printout t "Qual a quantidade de MO (equipe propria)?" crlf)
-  (bind ?MO-quantity (read))
+  (bind ?*MO-quantity* (read))
   
   (printout t crlf)
   
-  (assert(MO-quantity-is ?MO-quantity))
+  (assert(ask work-load-per-day))
+)
+
+
+
+(defrule ask-work-load-per-day
+  (ask work-load-per-day)
+=>
+  (printout t "Qual a carga horaria de trabalho/dia (equipe propria)?" crlf)
+  (bind ?*work-load-per-day* (read))
+  
+  (printout t crlf)
+  
+  (assert(ask stop-duration))
+)
+
+
+xxx
+(defrule ask-stop-duration
+  (ask work-load-per-day)
+=>
+  (printout t "Qual o tempo estimado da parada (em horas)?" crlf)
+  (bind ?*stop-duration* (read))
+  
+  (printout t crlf)
+  
   (assert(ask if-painting-is-required))
 )
 
@@ -328,7 +360,107 @@
   )
 )
 
+(defrule ventosa-service-is-movimento-horizontal
+  (ventosa-service-is movimento-horizontal)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
 
+(defrule ventosa-service-is-movimento-vertical
+  (ventosa-service-is movimento-vertical)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule ventosa-service-is-bancal-de-carga
+  (ventosa-service-is bancal-de-carga)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule ventosa-service-is-bancal-de-descarga
+  (ventosa-service-is bancal-de-descarga)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule desbastador-service-is-chapa-tapete-guias
+  (desbastador-service-is chapa-tapete-guias)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule desbastador-service-is-bloco-dos-rolos
+  (desbastador-service-is bloco-dos-rolos)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule desbastador-service-is-sistema-de-lubrificacao
+  (desbastador-service-is sistema-de-lubrificacao)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule desbastador-service-is-sistema-bandejo
+  (desbastador-service-is sistema-bandejo)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule polidora-service-is-chapa-tapete-guias
+  (polidora-service-is chapa-tapete-guias)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule polidora-service-is-bloco-acionamento-testas
+  (polidora-service-is bloco-acionamento-testas)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule polidora-service-is-sistema-de-lubrificacao
+  (polidora-service-is sistema-de-lubrificacao)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule polidora-service-is-sistema-bandejo
+  (polidora-service-is sistema-bandejo)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule esquadrejador-service-is-chapa-tapete-guias
+  (esquadrejador-service-is chapa-tapete-guias)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule esquadrejador-service-is-troca-mancais
+  (esquadrejador-service-is troca-mancais)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule esquadrejador-service-is-empurrador
+  (esquadrejador-service-is empurrador)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule esquadrejador-service-is-acionamento-e-polias-motriz
+  (esquadrejador-service-is acionamento-e-polias-motriz)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
+
+(defrule esquadrejador-service-is-sistema-de-abertura
+  (esquadrejador-service-is sistema-de-abertura)
+=>
+  (bind ?*hh-tarefa* (+ ?*hh-tarefa* 1))
+)
 
 (defrule show-results
   (show results)
@@ -348,7 +480,6 @@
           (progn$ (?fact-address2 (get-fact-list)) 
             (bind ?fact-name2 (fact-relation ?fact-address2))
             (bind ?match-name (str-cat ?equipment-name "-service-is"))
-            ;(printout t "x> " ?match-name " " ?fact-name2 crlf)
             (bind ?match (str-compare ?match-name ?fact-name2))
             (if (eq ?match 0)
               then
@@ -362,13 +493,19 @@
     )
   )	
   (printout t crlf)
-    
-  (printout t "A quantidade de MO propria eh:" crlf)
-  (printout t "A quantidade de MO a ser contratada eh:" crlf)
-  (printout t "A quantidade total de MO para a Parada eh:" crlf)
+
+  (bind ?team-per-day (/ 24 ?*work-load-per-day*))
+  (bind ?workers-total-per-period (/ ?*hh-tarefa* ?*stop-duration*))
+  (bind ?workers-total-per-period (* ?workers-total-per-period ?team-per-day))
+  (bind ?external-workers (- ?workers-total-per-period ?*MO-quantity*))
+      
+  (printout t "A quantidade de MO propria eh: " ?*MO-quantity* crlf)
+  (printout t "A quantidade de MO a ser contratada eh: " ?external-workers crlf)
+  (printout t "A quantidade total de MO para a Parada eh: " ?*hh-tarefa* crlf)
+  (printout t "A carga horaria de trabalho por dia eh: " ?*work-load-per-day* crlf)  
+  (printout t "O tempo estimado da parada (em horas) eh: " ?*stop-duration* crlf)  
   (printout t "O regime de trabalho recomendado para as atividades eh:" crlf)
   (printout t "A equipe de pintura deve trabalhar no turno:" crlf)
   (printout t "O tempo estimado da Parada eh de:" crlf)
   (printout t "O custo estimado da Parada eh:" crlf)
-
 )
